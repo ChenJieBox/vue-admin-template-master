@@ -6,7 +6,7 @@
         <el-input v-model="teacher.name"/>
       </el-form-item>
       <el-form-item label="讲师排序">
-        <el-input-number v-model="teacher.sort" controls-position="right" min="0"/>
+        <el-input-number v-model="teacher.sort" controls-position="right" />
       </el-form-item>
       <el-form-item label="讲师头衔">
         <el-select v-model="teacher.level" clearable placeholder="请选择">
@@ -49,6 +49,7 @@ export default {
   },
   watch: { // 监听
     $route(to, from) { // 路由变化方式，路由发生变化，方法就会执行
+      console.log(to, from)
       this.init()
     }
   },
