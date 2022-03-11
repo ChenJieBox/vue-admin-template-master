@@ -150,13 +150,14 @@ export default {
         })
     },
     close() {
-      console.log(this.BASE_API)
       this.imagecropperShow = false
+      this.imagecropperKey = this.imagecropperKey + 1
     },
     cropSuccess(data) {
       this.imagecropperShow = false
       // 上传成功之后得到的地址
       this.teacher.avatar = data.url
+      this.imagecropperKey = this.imagecropperKey + 1
     }
   }
 }
