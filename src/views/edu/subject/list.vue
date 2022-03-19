@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2022-03-10 11:04:33
- * @LastEditTime: 2022-03-11 16:25:34
+ * @LastEditTime: 2022-03-18 17:50:06
  * @LastEditors: Please set LastEditors
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \vue-admin-template-master\src\views\edu\subject\list.vue
@@ -19,6 +19,12 @@
       default-expand-all
     />
 
+    <el-cascader
+      v-model="value"
+      :show-all-levels="false"
+      :options="subjectList"
+      :props="{ expandTrigger: 'hover',value:'id' ,label:'title'}"
+      @change="handleChange"/>
   </div>
 </template>
 
@@ -33,7 +39,8 @@ export default {
       defaultProps: {
         children: 'children',
         label: 'title'
-      }
+      },
+      value: null
     }
   },
   watch: {
@@ -58,6 +65,9 @@ export default {
     filterNode(value, data) {
       if (!value) return true
       return data.title.indexOf(value) !== -1
+    },
+    handleChange(value) {
+      alert(value[1])
     }
   }
 }
