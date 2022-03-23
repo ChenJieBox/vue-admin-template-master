@@ -20,6 +20,7 @@
 
       <el-form-item label="课程分类">
         <el-cascader
+          v-model="elcascader"
           :options="subjectList"
           :props="{ expandTrigger: 'hover',value:'id' ,label:'title'}"
           @change="handleChange"/>
@@ -46,7 +47,9 @@
 
       <!-- 课程简介 TODO -->
       <el-form-item label="课程简介">
-        <el-input v-model="courseInfo.description" placeholder=" "/>
+
+        <tinymce :height="300" v-model="courseInfo.description"/>
+
       </el-form-item>
 
       <!-- 课程封面 TODO -->
@@ -78,7 +81,10 @@
 import course from '@/api/edu/course'
 import subject from '@/api/edu/subject'
 import { getListTeacher } from '@/api/teacher'
+import Tinymce from '@/components/Tinymce'
+
 export default {
+  components: { Tinymce },
   data() {
     return {
       saveBtnDisabled: false,
@@ -92,6 +98,7 @@ export default {
         cover: '/static/01.jpg',
         price: 0
       },
+      elcascader: [],
       BASE_API: process.env.BASE_API, // 接口API地址
       teacherList: [], // 封装所有的讲师
       subjectList: [] // 课程分类
@@ -103,8 +110,22 @@ export default {
     this.getListTeacher()
     // 获取课程分类
     this.getSubject()
+    if (this.$route.params && this.$route.params.id) {
+      this.courseInfo.id = this.$route.params.id
+      this.getInfo()
+    }
   },
   methods: {
+    // 根据课程ID查询课程信息
+    getInfo() {
+      course.getCourseInfo(this.courseInfo.id)
+        .then(res => {
+          this.courseInfo = res.data.courseInfoVo
+          this.elcascader.splice(0, 1, this.courseInfo.subjectParentId)
+          this.elcascader.splice(1, 1, this.courseInfo.subjectId)
+          console.log(this.elcascader)
+        })
+    },
     // 上传封面成功调用的方法
     handleAvatarSuccess(res, file) {
       this.courseInfo.cover = res.data.url
@@ -122,28 +143,11 @@ export default {
       }
       return isJPG && isLt2M
     },
-    // 点击某个一级分类，触发change，显示对应二级分类
-    subjectLevelOneChanged(value) {
-      // value就是一级分类id值
-      // 遍历所有的分类，包含一级和二级
-      for (var i = 0; i < this.subjectOneList.length; i++) {
-        // 每个一级分类
-        var oneSubject = this.subjectOneList[i]
-        // 判断：所有一级分类id 和 点击一级分类id是否一样
-        if (value === oneSubject.id) {
-          // 从一级分类获取里面所有的二级分类
-          this.subjectTwoList = oneSubject.children
-          // 把二级分类id值清空
-          this.courseInfo.subjectId = ''
-        }
-      }
-    },
     // 查询所有的一级分类
     getSubject() {
       subject.getSubjectList().then(response => {
         if (response.success === true) {
           this.subjectList = response.data.list
-          console.log(this.subjectList)
         }
       })
     },
@@ -155,7 +159,42 @@ export default {
           this.teacherList = response.data.items
         })
     },
-    saveOrUpdate() {
+
+    // saveOrUpdate() {
+    //   if (!this.courseInfo.id) {
+    //     alert('添加课程信息')
+    //     this.addCourse()
+    //   } else {
+    //     alert('更新课程信息')
+    //     this.updateCourse()
+    //   }
+    // },
+    // updateCourse() {
+    //   course.updateCourseInfo(this.courseInfo)
+    //     .then(response => {
+    //       this.$message({
+    //         type: 'success',
+    //         message: '更新课程信息成功!'
+    //       })
+    //       this.$router.push({ path: '/course/chapter/' + response.data.courseInfo.id })
+    //     })
+    // },
+    // addCourse() {
+    //   course.addCourseInfo(this.courseInfo)
+    //     .then(response => {
+    //       this.$message({
+    //         type: 'success',
+    //         message: '添加课程信息成功!'
+    //       })
+    //       alert('....')
+    //       this.$router.push({ path: '/course/chapter/' + response.data.courseInfo.id })
+    //     })
+    // },
+    handleChange() {
+      this.courseInfo.subjectId = this.elcascader[1]
+      this.courseInfo.subjectParentId = this.elcascader[0]
+    },
+    addCourse() {
       course.addCourseInfo(this.courseInfo)
         .then(response => {
           // 提示
@@ -167,9 +206,38 @@ export default {
           this.$router.push({ path: '/course/chapter/' + response.data.courseId })
         })
     },
-    handleChange(value) {
-      this.courseInfo.subjectParentId = value[1]
+    // 修改课程
+    updateCourse() {
+      course.updateCourseInfo(this.courseInfo)
+        .then(response => {
+          // 提示
+          this.$message({
+            type: 'success',
+            message: '修改课程信息成功!'
+          })
+          // 跳转到第二步
+          this.$router.push({ path: '/course/chapter/' + response.data.courseId })
+        })
+    },
+    saveOrUpdate() {
+      // 判断添加还是修改
+      if (!this.courseInfo.id) {
+        // 添加
+        this.addCourse()
+      } else {
+        this.updateCourse()
+      }
     }
   }
 }
 </script>
+
+<style scoped>
+
+.tinymce-container {
+
+  line-height: 29px;
+
+}
+
+</style>
