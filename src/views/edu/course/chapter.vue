@@ -66,22 +66,40 @@
     </el-dialog>
 
     <!-- 添加和修改课时表单 -->
-    <el-dialog :visible.sync="dialogVideoFormVisible" title="添加课时">
-      <el-form :model="video" label-width="120px">
-        <el-form-item label="课时标题">
+    <el-dialog :visible.sync="dialogVideoFormVisible" title="添加课时" >
+      <el-form ref="videoFrom" :model="video" label-width="120px">
+        <el-form-item label="课时标题" prop="title">
           <el-input v-model="video.title"/>
         </el-form-item>
-        <el-form-item label="课时排序">
+        <el-form-item label="课时排序" prop="sort">
           <el-input-number v-model="video.sort" :min="0" controls-position="right"/>
         </el-form-item>
-        <el-form-item label="是否免费">
+        <el-form-item label="是否免费" prop="free">
           <el-radio-group v-model="video.free">
             <el-radio :label="true">免费</el-radio>
             <el-radio :label="false">默认</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="上传视频">
-          <!-- TODO -->
+          <el-upload
+            :on-success="handleVodUploadSuccess"
+            :on-remove="handleVodRemove"
+            :before-remove="beforeVodRemove"
+            :on-exceed="handleUploadExceed"
+            :file-list="fileList"
+            :action="BASE_API+'/eduvod/video/uploadVideo'"
+            :limit="1"
+            class="upload-demo">
+            <el-button size="small" type="primary">上传视频</el-button>
+            <el-tooltip placement="right-end">
+              <div slot="content">最大支持1G，<br>
+                支持3GP、ASF、AVI、DAT、DV、FLV、F4V、<br>
+                GIF、M2T、M4V、MJ2、MJPEG、MKV、MOV、MP4、<br>
+                MPE、MPG、MPEG、MTS、OGG、QT、RM、RMVB、<br>
+                SWF、TS、VOB、WMV、WEBM 等视频格式上传</div>
+              <i class="el-icon-question"/>
+            </el-tooltip>
+          </el-upload>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -112,9 +130,12 @@ export default {
         free: 0,
         videoSourceId: ''
       },
+      fileList: [],
+      BASE_API: process.env.BASE_API,
       dialogChapterFormVisible: false, // 章节弹框
       dialogVideoFormVisible: false, // 小节弹框
       saveVideoBtnDisabled: false
+
     }
   },
   created() {
@@ -126,6 +147,23 @@ export default {
     }
   },
   methods: {
+    // ================================视频操作===============================
+    handleVodRemove() {
+
+    },
+    beforeVodRemove() {
+
+    },
+    // 上传视频成功调用的方法
+    handleVodUploadSuccess(response, file, fileList) {
+      this.video.videoSourceId = response.data.videoId
+      alert(this.video.videoSourceId)
+      console.log(this.video)
+    },
+    // 视图上多一个视频
+    handleUploadExceed() {
+      this.$message.warning('想要重新上传视频，请先删除已上传的视频')
+    },
     // ==============================小节操作====================================
     // 删除小节
     removeVideo(id) {
@@ -145,6 +183,8 @@ export default {
             // 刷新页面
             this.getChapterVideo()
           })
+      }).catch(() => {
+
       }) // 点击取消，执行catch方法
     },
     // 修改章节弹框数据回显
@@ -155,6 +195,7 @@ export default {
       video.getVideo(id)
         .then(response => {
           this.video = response.data.video
+          console.log(this.video)
         })
     },
     // 添加小节弹框的方法
@@ -163,6 +204,13 @@ export default {
       this.dialogVideoFormVisible = true
       // 设置章节id
       this.video.chapterId = chapterId
+      // 清空表单数据
+      //   this.$nextTick(() => {
+      //     this.$refs.videoFrom.resetFileds()
+      //     // if (this.$refs.videoFrom && this.$refs.videoFrom.resetFileds()) {
+      //     // console.log()
+      //   })
+      this.$refs.videoFrom.resetFileds()
     },
     // 添加小节
     addVideo() {
@@ -199,7 +247,6 @@ export default {
       if (!this.video.id) {
         this.addVideo()
       } else {
-        alert('sdaf')
         this.updateVideo()
       }
     },
@@ -223,6 +270,8 @@ export default {
             // 刷新页面
             this.getChapterVideo()
           })
+      }).catch(() => {
+
       }) // 点击取消，执行catch方法
     },
     // 修改章节弹框数据回显
